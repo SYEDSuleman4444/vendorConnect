@@ -30,11 +30,11 @@ const VendorForm = () => {
           });
         },
         (error) => {
-          setMessage("❌ Location error: " + error.message);
+          setMessage("\u274C Location error: " + error.message);
         }
       );
     } else {
-      setMessage("❌ Geolocation is not supported.");
+      setMessage("\u274C Geolocation is not supported.");
     }
   };
 
@@ -42,7 +42,7 @@ const VendorForm = () => {
     e.preventDefault();
 
     if (!vendor.name || !vendor.email || !vendor.phone || !vendor.businessName || !vendor.latitude || !vendor.longitude) {
-      setMessage("❌ Please fill all fields and get location.");
+      setMessage("\u274C Please fill all fields and get location.");
       return;
     }
 
@@ -59,37 +59,142 @@ const VendorForm = () => {
       });
 
       if (response.data.vendorId) {
-        setMessage("✅ Vendor registered successfully!");
+        setMessage("\u2705 Vendor registered successfully!");
         setVendor({ name: "", email: "", phone: "", businessName: "", latitude: "", longitude: "" });
         setTimeout(() => navigate("/vendor-login"), 1500);
       } else {
-        setMessage("❌ Error: Vendor ID missing in response.");
+        setMessage("\u274C Error: Vendor ID missing in response.");
       }
     } catch (error) {
-      setMessage("❌ Failed to register vendor. Try again.");
+      if (error.response && error.response.data && error.response.data.error) {
+        setMessage(error.response.data.error); // Display backend error message
+      } else {
+        setMessage("\u274C Failed to register vendor.");
+      }
     }
   };
 
   return (
-    <div style={{ textAlign: "center", padding: "20px" }}>
-      <h2>Vendor Registration</h2>
-      {message && <p style={{ color: message.startsWith("✅") ? "green" : "red" }}>{message}</p>}
-      
-      <form onSubmit={handleRegister}>
-        <input type="text" name="name" placeholder="Name" value={vendor.name} onChange={handleChange} required />
-        <input type="email" name="email" placeholder="Email" value={vendor.email} onChange={handleChange} required />
-        <input type="text" name="phone" placeholder="Phone" value={vendor.phone} onChange={handleChange} required />
-        <input type="text" name="businessName" placeholder="Business Name" value={vendor.businessName} onChange={handleChange} required />
-        <input type="text" placeholder="Latitude" value={vendor.latitude} readOnly />
-        <input type="text" placeholder="Longitude" value={vendor.longitude} readOnly />
-        <button type="button" onClick={fetchLocation}>Get Location</button>
-        <button type="submit">Register Vendor</button>
-      </form>
+    <div style={{
+      display: "flex",
+      justifyContent: "center",
+      alignItems: "center",
+      height: "100vh",
+      backgroundColor: "#f8f9fa",
+    }}>
+      <div style={{
+        width: "400px",
+        padding: "20px",
+        borderRadius: "8px",
+        backgroundColor: "#fff",
+        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+      }}>
+        <h2 style={{ textAlign: "center", marginBottom: "20px", color: "#333" }}>Vendor Registration</h2>
+        {message && (
+          <p
+            style={{
+              textAlign: "center",
+              color: message.startsWith("\u2705") ? "green" : "red",
+              marginBottom: "15px",
+            }}>
+            {message}
+          </p>
+        )}
 
-      {/* ✅ Added Login Button */}
-      <button onClick={() => navigate("/vendor-login")}>Already a Vendor? Login Here</button>
+        <form onSubmit={handleRegister} style={{ display: "flex", flexDirection: "column" }}>
+          <input
+            type="text"
+            name="name"
+            placeholder="Name"
+            value={vendor.name}
+            onChange={handleChange}
+            required
+            style={inputStyle}
+          />
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={vendor.email}
+            onChange={handleChange}
+            required
+            style={inputStyle}
+          />
+          <input
+            type="text"
+            name="phone"
+            placeholder="Phone"
+            value={vendor.phone}
+            onChange={handleChange}
+            required
+            style={inputStyle}
+          />
+          <input
+            type="text"
+            name="businessName"
+            placeholder="Business Name"
+            value={vendor.businessName}
+            onChange={handleChange}
+            required
+            style={inputStyle}
+          />
+          <input
+            type="text"
+            placeholder="Latitude"
+            value={vendor.latitude}
+            readOnly
+            style={inputStyle}
+          />
+          <input
+            type="text"
+            placeholder="Longitude"
+            value={vendor.longitude}
+            readOnly
+            style={inputStyle}
+          />
+          <button
+            type="button"
+            onClick={fetchLocation}
+            style={{ ...buttonStyle, backgroundColor: "#007bff", color: "#fff" }}>
+            Get Location
+          </button>
+          <button
+            type="submit"
+            style={{ ...buttonStyle, backgroundColor: "#28a745", color: "#fff" }}>
+            Register Vendor
+          </button>
+        </form>
+
+        <button
+          onClick={() => navigate("/vendor-login")}
+          style={{
+            ...buttonStyle,
+            backgroundColor: "#6c757d",
+            color: "#fff",
+            marginTop: "10px",
+          }}>
+          Already a Vendor? Login Here
+        </button>
+      </div>
     </div>
   );
+};
+
+const inputStyle = {
+  marginBottom: "10px",
+  padding: "10px",
+  borderRadius: "4px",
+  border: "1px solid #ccc",
+  fontSize: "14px",
+};
+
+const buttonStyle = {
+  padding: "10px 15px",
+  border: "none",
+  borderRadius: "4px",
+  cursor: "pointer",
+  fontSize: "14px",
+  marginBottom: "10px",
 };
 
 export default VendorForm;

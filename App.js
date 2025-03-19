@@ -7,6 +7,7 @@ import VendorForm from "./pages/VendorForm";
 import CustomerForm from "./pages/CustomerForm";
 import VendorInterface from "./pages/VendorInterface";
 import VendorLogin from "./pages/VendorLogin";
+import CustomerLogin from "./pages/CustomerLogin";
 import background from "./bg1.jpg";
 import Accordion from "react-bootstrap/Accordion";
 import CustomerInterface from "./pages/CustomerInterface";
@@ -129,18 +130,86 @@ const Home = () => {
 
 const Navbar = () => (
   <nav
+  style={{
+    display: "flex",
+    justifyContent: "space-around",
+    padding: "20px",
+   
+    boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
+    border: "2px solid 	#DAA520",
+      borderRadius: "20px",
+   
+    
+  }}
+>
+  <Link
+    to="/"
     style={{
-      display: "flex",
-      justifyContent: "space-around",
-      padding: "30px 30px 30px 30px",
-      color: "#fff",
-      fontFamily: "'Arial', sans-serif",
+      textDecoration: "none",
+      color: "black",
+      fontWeight: "bold",
+      fontSize: "18px",
+      padding: "10px 20px",
+      transition: "all 0.3s ease",
+      border: "2px solid transparent",
+      borderRadius: "50px",
+    }}
+    onMouseOver={(e) => {
+      e.target.style.border = "2px solid crimson";
+      e.target.style.borderRadius = "50px";
+    }}
+    onMouseOut={(e) => {
+      e.target.style.border = "2px solid transparent";
     }}
   >
-    <Link to="/" style={{ textDecoration: "none", color: "black", fontWeight: "bold" }}>Home</Link>
-    <Link to="/about" style={{ textDecoration: "none", color: "black", fontWeight: "bold" }}>About Us</Link>
-    <Link to="/contact" style={{ textDecoration: "none", color: "black", fontWeight: "bold" }}>Contact Us</Link>
-  </nav>
+    Home
+  </Link>
+  <Link
+    to="/about"
+    style={{
+      textDecoration: "none",
+      color: "black",
+      fontWeight: "bold",
+      fontSize: "18px",
+      padding: "10px 20px",
+      transition: "all 0.3s ease",
+      border: "2px solid transparent",
+      borderRadius: "50px",
+    }}
+    onMouseOver={(e) => {
+      e.target.style.border = "2px solid crimson";
+      e.target.style.borderRadius = "50px";
+    }}
+    onMouseOut={(e) => {
+      e.target.style.border = "2px solid transparent";
+    }}
+  >
+    About Us
+  </Link>
+  <Link
+    to="/contact"
+    style={{
+      textDecoration: "none",
+      color: "black",
+      fontWeight: "bold",
+      fontSize: "18px",
+      padding: "10px 20px",
+      transition: "all 0.3s ease",
+      border: "2px solid transparent",
+      borderRadius: "50px",
+    }}
+    onMouseOver={(e) => {
+      e.target.style.border = "2px solid crimson";
+      e.target.style.borderRadius = "50px";
+    }}
+    onMouseOut={(e) => {
+      e.target.style.border = "2px solid transparent";
+    }}
+  >
+    Contact Us
+  </Link>
+</nav>
+
 );
 
 const Footer = () => (
@@ -182,6 +251,7 @@ const App = () => {
         {/* Vendor Routes */}
         <Route path="/vendor-register" element={<VendorForm />} />  
         <Route path="/vendor-login" element={<VendorLogin />} />  
+        <Route path="/customer-login" element={<CustomerLogin />} /> 
         <Route path="/vendor-interface" element={<VendorInterface />} />  
 
         {/* Customer Routes */}
