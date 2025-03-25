@@ -2,10 +2,15 @@ const express = require("express");
 const mongoose = require("mongoose");
 const bodyParser = require("body-parser");
 const cors = require("cors");
+const http = require("http");
+const { Server } = require("socket.io");
 
 const app = express();
 app.use(bodyParser.json());
-app.use(cors());
+app.use(cors({
+  origin: ["http://localhost:3000", "http://localhost:3001"], // Allow requests from both ports
+  methods: ["GET", "POST", "DELETE"], // Define allowed HTTP methods
+}));
 
 // ✅ MongoDB Connection
 mongoose
@@ -217,6 +222,25 @@ const customerSchema = new mongoose.Schema({
 });
 const Customer = mongoose.model("Customer", customerSchema);
 
+app.get("/api/customers-by-messages/:vendorId", async (req, res) => {
+  try {
+    const { vendorId } = req.params;
+
+    // Find all chats with the vendor as the receiver
+    const chats = await Chat.find({ receiverId: vendorId }).distinct("senderId");
+
+    // Retrieve customer details using sender IDs
+    const customers = await Customer.find({ _id: { $in: chats } });
+
+    res.status(200).json(customers);
+  } catch (error) {
+    console.error("Error fetching customers by messages:", error);
+    res.status(500).json({ error: "Failed to fetch customers by messages." });
+  }
+});
+
+
+
 app.post("/api/customers", async (req, res) => {
   try {
     const { name, email, phone } = req.body;
@@ -236,9 +260,91 @@ app.post("/api/customers", async (req, res) => {
     res.status(500).json({ error: "❌ Failed to register customer. Try again." });
   }
 });
+const chatSchema = new mongoose.Schema({
+  senderId: { type: mongoose.Schema.Types.ObjectId, required: true },
+  receiverId: { type: mongoose.Schema.Types.ObjectId, required: true },
+  message: { type: String, required: true },
+  timestamp: { type: Date, default: Date.now },
+});
 
+chatSchema.index({ timestamp: 1 }, { expireAfterSeconds: 3600 }); // Expire messages after 1 hour
+
+const Chat = mongoose.model("Chat", chatSchema);
+app.get("/api/chats", async (req, res) => {
+  try {
+    const { senderId, receiverId } = req.query;
+
+    const chats = await Chat.find({
+      $or: [
+        { senderId, receiverId },
+        { senderId: receiverId, receiverId: senderId },
+      ],
+    }).sort({ timestamp: 1 });
+
+    res.status(200).json(chats);
+  } catch (error) {
+    console.error("Error fetching chats:", error);
+    res.status(500).json({ error: "❌ Failed to fetch chats." });
+  }
+});
+const userSocketMap = {}
+// ✅ Start WebSocket Server
+const server = http.createServer(app); // Create HTTP server
+const io = new Server(server, {
+  cors: {
+    origin: "*", // Allow all origins
+    methods: ["GET", "POST"],
+  },
+});
+
+io.on("connection", (socket) => {
+  console.log("A user connected:", socket.id);
+
+   // Register user with their user ID
+   socket.on("registerUser", (userId) => {
+    Object.keys(userSocketMap).forEach((key) => {
+      if (key === userId) {
+        delete userSocketMap[key];
+      }
+    });
+    userSocketMap[userId] = socket.id;
+    console.log(`User ${userId} registered with socket ${socket.id}`);
+  });
+
+  // Listen for new messages
+  socket.on("sendMessage", async (data) => {
+    try {
+      const { senderId, receiverId, message } = data;
+
+      // Save message to database
+      const newChat = new Chat({ senderId, receiverId, message });
+      await newChat.save();
+
+      // Emit message to receiver
+      const receiverSocketId = userSocketMap[receiverId];
+      if (receiverSocketId) {
+        io.to(receiverSocketId).emit("receiveMessage", newChat);
+      } else {
+        console.log(`User ${receiverId} is not connected.`);
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
+  });
+
+  // Handle user disconnect
+  socket.on("disconnect", () => {
+    // Remove user from mapping
+    Object.keys(userSocketMap).forEach((userId) => {
+      if (userSocketMap[userId] === socket.id) {
+        delete userSocketMap[userId];
+        console.log(`User ${userId} disconnected`);
+      }
+    });
+  });
+});
 // ✅ Start Server
 const PORT = 5000;
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`🚀 Server running at: http://localhost:${PORT}`);
 });

@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import "./VendorInterface.css"; // Import the CSS file
+import "./VendorInterface.css"; 
+// Import the CSS file
+import Chat from "./Chat";
 
-const VendorInterface = () => {
+const VendorInterface = ({ socket }) => { // Ensure `socket` is passed as a prop
   const [vendor, setVendor] = useState(null);
   const [products, setProducts] = useState([]);
   const [newProduct, setNewProduct] = useState({ name: "", price: "" });
+  const [selectedCustomerId, setSelectedCustomerId] = useState(null); // For chatting with a specific customer
+  const [customers, setCustomers] = useState([]);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -14,6 +18,12 @@ const VendorInterface = () => {
     if (!vendorId) {
       navigate("/VendorForm");
       return;
+    }
+
+     // Register vendorId with the WebSocket server
+     if (socket && vendorId) {
+      socket.emit("registerUser", vendorId);
+      console.log(`Registered vendorId: ${vendorId}`);
     }
 
     // Fetch vendor details
@@ -33,7 +43,17 @@ const VendorInterface = () => {
         setProducts(res.data);
       })
       .catch((err) => console.error("Error fetching products:", err));
-  }, [navigate]);
+
+    // Fetch customers
+    axios
+  .get(`http://localhost:5000/api/customers-by-messages/${vendorId}`) // Correct use of template literal
+  .then((res) => {
+    console.log("Fetched customers:", res.data);
+    setCustomers(res.data);
+  })
+  .catch((err) => console.error("Error fetching customers:", err));
+
+  }, [socket, navigate]); // Added `navigate` as a dependency in the dependency array
 
   const addProduct = async () => {
     try {
@@ -107,6 +127,34 @@ const VendorInterface = () => {
           <li>No products available.</li>
         )}
       </ul>
+      <h2>Chat with Customers</h2>
+      <ul className="customer-list">
+        {customers.length > 0 ? (
+          customers.map((customer) => (
+            <li key={customer._id} className="customer-item">
+              <span>{customer.name} ({customer.email})</span>
+              <button onClick={() => setSelectedCustomerId(customer._id)}>
+                Chat
+              </button>
+            </li>
+          ))
+        ) : (
+          <li>No customers available.</li>
+        )}
+      </ul>
+
+      {selectedCustomerId && (
+        <div className="chat-modal">
+          <Chat socket={socket} 
+          senderId={localStorage.getItem("vendorId")} 
+          receiverId={selectedCustomerId} 
+          />
+          <button onClick={() => setSelectedCustomerId(null)}
+            >
+              Close Chat
+              </button>
+        </div>
+      )}
     </div>
   );
 };

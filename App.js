@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+
 import { BrowserRouter as Router, Routes, Route, Link, useNavigate } from "react-router-dom";
 import AboutUs from "./pages/AboutUs";
 import ContactUs from "./pages/ContactUs";
@@ -11,8 +12,8 @@ import CustomerLogin from "./pages/CustomerLogin";
 import background from "./bg1.jpg";
 import Accordion from "react-bootstrap/Accordion";
 import CustomerInterface from "./pages/CustomerInterface";
-
-
+import Chat from "./pages/Chat";
+import { io } from "socket.io-client";
 
 const Home = () => {
   const navigate = useNavigate();
@@ -229,6 +230,19 @@ const Footer = () => (
 );
 
 const App = () => {
+  const [socket, setSocket] = useState(null);
+
+  useEffect(() => {
+    // Connect to the WebSocket server
+    const newSocket = io("http://localhost:5000"); // Match the backend WebSocket server URL
+    setSocket(newSocket);
+
+    newSocket.on("connect_error", (err) => {
+      console.error("WebSocket connection error:", err);
+    });
+
+    return () => newSocket.disconnect(); // Clean up connection on unmount
+  }, []);
   return (
     <Router>
       <div
@@ -252,11 +266,11 @@ const App = () => {
         <Route path="/vendor-register" element={<VendorForm />} />  
         <Route path="/vendor-login" element={<VendorLogin />} />  
         <Route path="/customer-login" element={<CustomerLogin />} /> 
-        <Route path="/vendor-interface" element={<VendorInterface />} />  
+        <Route path="/vendor-interface" element={<VendorInterface socket={socket} />} />  
 
         {/* Customer Routes */}
         <Route path="/customer-register" element={<CustomerForm />} />  
-        <Route path="/customer-interface" element={<CustomerInterface />} />  
+        <Route path="/customer-interface" element={<CustomerInterface socket={socket} />} />  
       </Routes>
         <Footer />
       </div>
