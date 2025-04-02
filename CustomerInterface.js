@@ -34,6 +34,10 @@ const CustomerInterface = ({ socket }) => {
   const [selectedVendorIdForChat, setSelectedVendorIdForChat] = useState(null); // Chat with a vendor
   const [messages, setMessages] = useState([]); // Messages for the chat
   const customerId = localStorage.getItem("customerId") || "guestCustomerId"; // Dynamically get customer ID
+  const [vendorRatings, setVendorRatings] = useState([]);
+  const [newRating, setNewRating] = useState(0);
+  const [newReview, setNewReview] = useState("");
+  const [customerNames, setCustomerNames] = useState({});
 
 
   useEffect(() => {
@@ -101,12 +105,51 @@ const CustomerInterface = ({ socket }) => {
       const response = await axios.get(`http://localhost:5000/api/products/vendor/${vendorId}`);
       setVendorProducts(response.data);
       setShowProductsPopup(true);
+      fetchVendorRatings(vendorId);
     } catch (error) {
       console.error("Error fetching products:", error);
       setVendorProducts([]);
       setShowProductsPopup(false);
+      setVendorRatings([]);
     }
   };
+  const fetchVendorRatings = async (vendorId) => {
+    try {
+      const response = await axios.get(`http://localhost:5000/api/ratings/${vendorId}`);
+      setVendorRatings(response.data);
+      const customerNameMap = {};
+      for (const rating of response.data) {
+        try {
+          const customer = await axios.get(`http://localhost:5000/api/customers/${rating.customerId}`);
+          customerNameMap[rating.customerId] = customer.data.name;
+        } catch (customerError) {
+          console.error("Error fetching customer name:", customerError);
+          customerNameMap[rating.customerId] = "Unknown Customer";
+        }
+      }
+      setCustomerNames(customerNameMap);
+    } catch (error) {
+      console.error("Error fetching ratings:", error);
+      setVendorRatings([]);
+    }
+  };
+
+  const handleRatingSubmit = async (vendorId) => {
+    try {
+      await axios.post(`http://localhost:5000/api/ratings`, {
+        vendorId: vendorId,
+        customerId: customerId,
+        rating: newRating,
+        review: newReview,
+      });
+      fetchVendorRatings(vendorId);
+      setNewRating(0);
+      setNewReview("");
+    } catch (error) {
+      console.error("Error submitting rating:", error);
+    }
+  };
+
 
   const filteredVendors = productSearchTerm
     ? vendors.filter((vendor) =>
@@ -172,6 +215,7 @@ const CustomerInterface = ({ socket }) => {
               >
                 Chat with Vendor
               </button>
+              
             </li>
           ))}
         </ul>
@@ -243,10 +287,35 @@ const CustomerInterface = ({ socket }) => {
               </React.Fragment>
             ))}
           </div>
-          <button
-            onClick={() => setShowProductsPopup(false)}
-            className="close-button"
-          >
+          <div>
+          <h4>Ratings & Reviews</h4>
+            {vendorRatings.map((rating) => (
+              <div key={rating._id}>
+                <p>
+                  <strong>{customerNames[rating.customerId]}:</strong> Rating: {rating.rating}
+                </p>
+                <p>Review: {rating.review}</p>
+              </div>
+            ))}
+            <div>
+              <input
+                type="number"
+                value={newRating}
+                onChange={(e) => setNewRating(e.target.value)}
+                placeholder="Rating (1-5)"
+              />
+              <textarea
+                value={newReview}
+                onChange={(e) => setNewReview(e.target.value)}
+                placeholder="Review"
+              />
+              <button onClick={() => handleRatingSubmit(selectedVendor._id)}>Submit Rating</button>
+            </div>
+          </div>
+          <button onClick={() => {
+            setShowProductsPopup(false)
+            setVendorRatings([]); //reset ratings.
+            }} className="close-button">
             Close
           </button>
         </div>
