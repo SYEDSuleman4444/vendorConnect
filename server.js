@@ -287,6 +287,53 @@ app.get("/api/chats", async (req, res) => {
     res.status(500).json({ error: "❌ Failed to fetch chats." });
   }
 });
+
+//Reviews
+const ratingSchema = new mongoose.Schema({
+  vendorId: { type: mongoose.Schema.Types.ObjectId, ref: "Vendor" },
+  customerId: String,
+  rating: { type: Number, min: 1, max: 5 },
+  review: String,
+});
+const Rating = mongoose.model("Rating", ratingSchema);
+
+app.get("/api/ratings/:vendorId", async (req, res) => {
+  try {
+    const ratings = await Rating.find({ vendorId: req.params.vendorId });
+    res.json(ratings);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.post("/api/ratings", async (req, res) => {
+  const rating = new Rating({
+    vendorId: req.body.vendorId,
+    customerId: req.body.customerId,
+    rating: req.body.rating,
+    review: req.body.review,
+  });
+
+  try {
+    const newRating = await rating.save();
+    res.status(201).json(newRating);
+  } catch (error) {
+    res.status(400).json({ message: error.message });
+  }
+});
+
+app.get("/api/customers/:customerId", async (req, res) => {
+  try {
+    const customer = await Customer.findById(req.params.customerId);
+    if (!customer) {
+      return res.status(404).json({ error: "Customer not found" });
+    }
+    res.json(customer);
+  } catch (error) {
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 const userSocketMap = {}
 // ✅ Start WebSocket Server
 const server = http.createServer(app); // Create HTTP server

@@ -1,0 +1,73 @@
+/* VendorInterface.css */
+.vendor-container {
+    text-align: center;
+    padding: 20px;
+    font-family: Arial, sans-serif;
+  }
+  
+  .product-form {
+    margin-bottom: 20px;
+  }
+  
+  .product-form input {
+    padding: 8px;
+    margin: 5px;
+    width: 200px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  
+  .product-form button {
+    background-color: crimson;
+    color: white;
+    padding: 8px 15px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  
+  .product-form button:hover {
+    background-color: darkred;
+  }
+  
+  /* Product List Styling */
+  .product-list {
+    list-style: none;
+    padding: 0;
+  }
+  
+  .product-item {
+    background: white;
+    border: 1px solid #ddd;
+    margin: 10px auto;
+    padding: 15px;
+    width: 50%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-radius: 10px;
+    box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  .product-name {
+    font-weight: bold;
+  }
+  
+  .product-price {
+    color: green;
+    font-weight: bold;
+  }
+  
+  .delete-btn {
+    background-color: crimson;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  
+  .delete-btn:hover {
+    background-color: darkred;
+  }
+  
